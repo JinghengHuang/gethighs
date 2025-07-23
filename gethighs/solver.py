@@ -109,7 +109,7 @@ class HiGHS:
     def solve(
         self,
         model,
-        time_limit=None,
+        time_limit=30,
         warmstart=False,
         write_model_file=None,
         solution_file=None,
@@ -130,7 +130,7 @@ class HiGHS:
             Pyomo initialized model instance
 
         time_limit : int | float | str, optional
-            Time limit in seconds. Overrides time_limit parameter from options. By default None
+            Time limit in seconds. Overrides time_limit parameter from options. By default 30
 
         warmstart : bool, optional
             Either or not to use the current solutions as warmstart. Be careful about model changes.
@@ -213,10 +213,13 @@ class HiGHS:
         self.cmd_line = cmd_line
         process = subprocess.Popen(cmd_line, shell=True)
         time.sleep(sleep_time)
-        while not os.path.exists(solfile):
+        total_time = 0
+        while not os.path.exists(solfile) and total_time < time_limit:
             time.sleep(sleep_time)
-        while not self._check_complete_sol():
+            total_time += sleep_time
+        while not self._check_complete_sol() and total_time < time_limit:
             time.sleep(sleep_time)
+            total_time += sleep_time
         time.sleep(sleep_time)
         process.terminate()
 
