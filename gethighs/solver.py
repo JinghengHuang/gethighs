@@ -214,13 +214,15 @@ class HiGHS:
         process = subprocess.Popen(cmd_line, shell=True)
         time.sleep(sleep_time)
         total_time = 0
-        while not os.path.exists(solfile) and total_time < time_limit:
+        # Check process status every loop
+        while process.poll() is None:
+            while not os.path.exists(solfile) and total_time < time_limit:
+                time.sleep(sleep_time)
+                total_time += sleep_time
+            while not self._check_complete_sol() and total_time < time_limit:
+                time.sleep(sleep_time)
+                total_time += sleep_time
             time.sleep(sleep_time)
-            total_time += sleep_time
-        while not self._check_complete_sol() and total_time < time_limit:
-            time.sleep(sleep_time)
-            total_time += sleep_time
-        time.sleep(sleep_time)
         process.terminate()
 
         self._read_values_from_sol(
